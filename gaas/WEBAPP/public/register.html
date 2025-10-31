@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Registration with Roles</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #3367d6;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>User Registration</h1>
+
+    <div id="registration-form">
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" required>
+        </div>
+
+        <div class="form-group">
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" required>
+        </div>
+
+        <div class="form-group">
+            <label for="homeAddress">Home Address:</label>
+            <input type="text" id="homeAddress" required>
+        </div>
+
+        <div class="form-group">
+            <label for="role">Role:</label>
+            <select id="role">
+                <option value="user">Regular User</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+
+        <button id="register-btn">Register</button>
+    </div>
+
+    <div id="message" class="message" style="display: none;"></div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyDFyGgCEgczLvQJNKcRAXZTHIXS2UDrBBQ",
+
+            authDomain: "gas-monitoring-f725e.firebaseapp.com",
+
+            databaseURL: "https://gas-monitoring-f725e-default-rtdb.firebaseio.com",
+
+            projectId: "gas-monitoring-f725e",
+
+            storageBucket: "gas-monitoring-f725e.firebasestorage.app",
+
+            messagingSenderId: "409509342356",
+
+            appId: "1:409509342356:web:2e1bbc7847a0162ab21881",
+
+            measurementId: "G-RWJNP2S40P"
+
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Registration function
+        async function registerUser(email, password, userData) {
+            try {
+                // Create user in Firebase Authentication
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Save additional user data to Realtime Database
+                await set(ref(database, 'users/' + user.uid), {
+                    email: email,
+                    firstName: userData.firstName,
+                    lastName: userData.lastName,
+                    role: userData.role,
+                    homeAddress: userData.homeAddress,
+                    createdAt: new Date().toISOString()
+                });
+
+                return user;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('register-btn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const role = document.getElementById('role').value;
+            const homeAddress = document.getElementById('homeAddress').value;
+
+            const messageDiv = document.getElementById('message');
+            messageDiv.style.display = 'none';
+
+            try {
+                const user = await registerUser(email, password, {
+                    firstName,
+                    lastName,
+                    role
+                });
+
+                messageDiv.textContent = `Registration successful! User ID: ${user.uid}`;
+                messageDiv.className = 'message success';
+                messageDiv.style.display = 'block';
+
+                // Clear form
+                document.getElementById('registration-form').reset();
+
+                console.log('User registered:', user);
+            } catch (error) {
+                let errorMessage = error.message;
+
+                // More user-friendly error messages
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'This email is already registered.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password should be at least 6 characters.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Please enter a valid email address.';
+                }
+
+                messageDiv.textContent = `Registration failed: ${errorMessage}`;
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+
+                console.error('Registration error:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>

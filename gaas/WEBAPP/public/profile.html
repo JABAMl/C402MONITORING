@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas & Flow Monitoring</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-header">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="title1"><i class="fas fa-id-card"></i> Profile</h3>
+            </div>
+        </div>
+    </div>
+
+
+
+
+        <div class="container mt-4">
+        <div class="card shadow-sm rounded-3">
+            <div class="card-header">
+            <h5><i class="fas fa-user me-2"></i> Profile Settings</h5>
+            </div>
+            <div class="card-body">
+
+            <!-- Basic Info -->
+            <div class="mb-4">
+                <h6>Account Info</h6>
+
+                <p><strong>Name:</strong> <span id="profile-name"></span></p>
+                <p><strong>Email:</strong> <span id="profile-email"></span></p>
+                
+            </div>
+
+            <hr>
+
+            <!-- Change Password Button -->
+            <div>
+                <h6>Security</h6>
+                <button class="btn btn-outline-primary" id="changepass">
+                <i class="fas fa-key me-2"></i> Change Password
+                </button>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <div class="container mt-4">
+            <button onclick="history.back()" class="btn btn-primary">back to dashboard</button>
+        </div>
+        
+
+
+
+    
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script type="module" src="/auth.js"></script>
+    <script type="module" src="/rstpass.js"></script>
+    <script type="module" src="/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> 
+</body>
+</html>

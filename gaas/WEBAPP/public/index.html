@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gas & Flow Monitoring</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- PushAlert -->
+<script type="text/javascript">
+        (function(d, t) {
+                var g = d.createElement(t),
+                s = d.getElementsByTagName(t)[0];
+                g.src = "https://cdn.pushalert.co/integrate_967f04c2a28aec3cd6b541cf788ccab6.js";
+                s.parentNode.insertBefore(g, s);
+        }(document, "script"));
+</script>
+<!-- End PushAlert -->
+</head>
+
+<body>
+    <div class="dashboard-header">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="title1">
+                    <i class="fas fa-fire"></i> Gas & Flow Monitoring System
+                </h3>
+            </div>
+            <!-- Dropdown -->
+            <div class="dropdown">
+                <button class="btn border-0 p-0" type="button" id="userMenu" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <img src="/image/profile.png" class="user-avatar" alt="User" />
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 p-2" aria-labelledby="userMenu"
+                    style="min-width: 220px">
+
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center rounded-2" href="profile.html">
+                            <i class="fas fa-user me-2"></i> Profile
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider" />
+                    </li>
+                     <li>
+                        <a class="dropdown-item d-flex align-items-center rounded-2" href="history.html">
+                            <i class="fas fa-user me-2"></i> History
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider" />
+                    </li>
+                    <li>
+                        <button id="logout-btn" class="btn btn-danger w-100">
+                            <i class="fas fa-sign-out-alt"></i>Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Change Threshold Modal -->
+            <div class="modal fade" id="thresholdModal" tabindex="-1" aria-labelledby="thresholdModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-3 shadow">
+                        <div class="modal-header">
+                            <h5 class="modal-title modal-text" id="thresholdModalLabel">
+                                <i class="fas fa-sliders-h me-2"></i> Change Threshold
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <!-- GAS Thresholds -->
+                            <h6 class="fw-bold">Gas Thresholds</h6>
+                            <div class="mb-3">
+                                <label class="form-label modal-text">Warning Threshold (ppm)</label>
+                                <input type="number" class="form-control" id="gas-threshold" placeholder="e.g. 200" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label modal-text">Danger Threshold (ppm)</label>
+                                <input type="number" class="form-control" id="high-gas-threshold"
+                                    placeholder="e.g. 400" />
+                            </div>
+
+                            <!-- FLOW Threshold -->
+                            <h6 class="fw-bold mt-3">Flow Threshold</h6>
+                            <div class="mb-3">
+                                <label class="form-label modal-text">Flow Limit (L/min)</label>
+                                <input type="number" class="form-control" id="flow-threshold" step="0.1"
+                                    placeholder="e.g. 5.0" />
+                            </div>
+
+                            <!-- Anomaly Threshold -->
+                            <h6 class="fw-bold mt-3">Anomaly Detection</h6>
+                            <div class="mb-3">
+                                <label class="form-label modal-text">Anomaly Sensitivity</label>
+                                <input type="number" class="form-control" id="anomaly-threshold" step="0.1"
+                                    placeholder="e.g. 3.0" />
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button class="btn btn-primary" id="save-settings">
+                                Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Current Readings -->
+        <div class="row">
+            <!-- Gas Reading -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-wind"></i> Gas Concentration
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="reading-display">
+                            <span id="gas-value">0</span>
+                            <span class="unit">ppm</span>
+                        </div>
+                        <div class="text-center mt-2">
+                            <span class="badge bg-info" id="gas-status">NORMAL</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flow Reading -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-tint"></i> Flow Rate
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="reading-display">
+                            <span id="flow-value">0</span>
+                            <span class="unit">L/min</span>
+                        </div>
+                        <div class="text-center mt-2">
+                            <span class="badge bg-info" id="flow-status">NORMAL</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cogs"></i> System Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="status-item">
+                            <span class="status-label">Valve:</span>
+                            <span class="badge bg-success" id="valve-status">OPEN</span>
+                        </div>
+                        <div class="status-item mt-2">
+                            <span class="status-label">Fan:</span>
+                            <span class="badge bg-secondary" id="fan-status">OFF</span>
+                        </div>
+                        <div class="status-item mt-2">
+                            <span class="status-label">Buzzer:</span>
+                            <span class="badge bg-secondary" id="buzzer-status">OFF</span>
+                        </div>
+                        <div class="status-item mt-2">
+                            <span class="status-label">Anomaly:</span>
+                            <span class="badge bg-success" id="anomaly-status">NORMAL</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Charts Row -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line"></i> Real-time Monitoring
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Single chart container for both datasets -->
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="combinedChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Event Log -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Event Log
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 200px; overflow-y: auto">
+                <div id="event-log">
+                    <div class="log-entry text-muted">
+                        <span class="log-time" id="current-time-log">00:00:00</span>
+                        <span>System initialized</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Thresholds -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-sliders-h"></i> Current Thresholds
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="threshold-item">
+                    <span>Flow Threshold:</span>
+                    <span class="threshold-value" id="current-flow-threshold-display">5.0 L/min</span>
+                </div>
+                <div class="threshold-item mt-2">
+                    <span>Gas Warning:</span>
+                    <span class="threshold-value" id="current-gas-threshold-display">200 ppm</span>
+                </div>
+                <div class="threshold-item mt-2">
+                    <span>Gas Danger:</span>
+                    <span class="threshold-value" id="current-high-gas-threshold-display">400 ppm</span>
+                </div>
+                <div class="threshold-item mt-2">
+                    <span>Anomaly Sensitivity:</span>
+                    <span class="threshold-value" id="current-anomaly-threshold-display">3.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                <!-- Alert Modal -->
+        <div class="modal fade" id="alertModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Alert!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="alertModalBody">
+                <!-- Alert message goes here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+            </div>
+        </div>
+        </div>
+
+
+        <!-- Alerts Section -->
+        <div class="row mt-4 alerts-sec">
+            <div class="col-12">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-exclamation-triangle"></i> Alerts &
+                            Notifications
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="alerts-container">
+                            <div class="alert alert-info">No active alerts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="d-grid col-6 mx-auto">
+        <button class="btn btn-warning rst-btn" id="resetButton" type="button">RESET</button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="/auth.js"></script>
+    <script type="module" src="/history.js"></script>
+    <script type="module" src="/main.js"></script>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
